@@ -1,0 +1,35 @@
+name: Member Contribution Action
+
+inputs:
+  token:
+    description: 'A Personal Access token with repo scope'
+    required: true
+  org:
+    description: 'GitHub organization to retrieve data from'
+    default: ''
+    required: false
+  days:
+    description: 'Amount of days in the past to collect data for'
+    default: '30'
+    required: false
+  sort:
+    description: 'Select sorting column'
+    # activeContrib, commitContrib, issueContrib, prContrib, prreviewContrib, repoIssueContrib, repoCommitContrib, repoPullRequestContrib, repoPullRequestReviewContrib
+    default: 'commitContrib'
+    required: false
+  committer-name:
+    description: 'The name of the committer that will appear in the Git history'
+    default: 'github-actions'
+    required: false
+  committer-email:
+    description: 'The committer email that will appear in the Git history'
+    default: 'github-actions@github.com'
+    required: false
+
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'list'
+  color: 'green'
