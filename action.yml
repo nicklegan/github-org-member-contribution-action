@@ -1,11 +1,11 @@
-name: Member Contribution Action
+name: GitHub Organization Member Contribution Action
 
 inputs:
   token:
-    description: 'A Personal Access token with repo scope'
+    description: 'A Personal Access token with repo, read:org and read:user scope'
     required: true
   org:
-    description: 'GitHub organization to retrieve data from'
+    description: 'Custom GitHub organization to retrieve data for'
     default: ''
     required: false
   days:
@@ -13,7 +13,7 @@ inputs:
     default: '30'
     required: false
   sort:
-    description: 'Select sorting column'
+    description: 'Column used for sorting resport results'
     # activeContrib, commitContrib, issueContrib, prContrib, prreviewContrib, repoIssueContrib, repoCommitContrib, repoPullRequestContrib, repoPullRequestReviewContrib
     default: 'commitContrib'
     required: false
@@ -25,6 +25,12 @@ inputs:
     description: 'The committer email that will appear in the Git history'
     default: 'github-actions@github.com'
     required: false
+  fromdate:
+    description: 'The date from which to start collecting data'
+    required: false
+  todate:
+    description: 'The date to which to stop collecting data'
+    required: false
 
 runs:
   using: 'node12'
@@ -33,4 +39,3 @@ runs:
 branding:
   icon: 'list'
   color: 'green'
-  

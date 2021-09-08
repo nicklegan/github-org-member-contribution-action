@@ -2,14 +2,14 @@ const arraySort = require('array-sort')
 const core = require('@actions/core')
 const github = require('@actions/github')
 const stringify = require('csv-stringify/lib/sync')
-const { Octokit } = require('@octokit/rest')
-const { retry } = require('@octokit/plugin-retry')
-const { throttling } = require('@octokit/plugin-throttling')
+const {Octokit} = require('@octokit/rest')
+const {retry} = require('@octokit/plugin-retry')
+const {throttling} = require('@octokit/plugin-throttling')
 
 const MyOctokit = Octokit.plugin(throttling, retry)
 const eventPayload = require(process.env.GITHUB_EVENT_PATH)
-const org = core.getInput('org', { required: false }) || eventPayload.organization.login
-const token = core.getInput('token', { required: true })
+const org = core.getInput('org', {required: false}) || eventPayload.organization.login
+const token = core.getInput('token', {required: true})
 
 // API throttling
 const octokit = new MyOctokit({
@@ -98,7 +98,7 @@ async function getMemberActivity(orgid, from, to, contribArray) {
         const repoPullRequestReviewContrib = member.contributionsCollection.totalRepositoriesWithContributedPullRequestReviews
 
         // Push all member contributions from query to array
-        contribArray.push({ userName, activeContrib, commitContrib, issueContrib, prContrib, prreviewContrib, repoIssueContrib, repoCommitContrib, repoPullRequestContrib, repoPullRequestReviewContrib })
+        contribArray.push({userName, activeContrib, commitContrib, issueContrib, prContrib, prreviewContrib, repoIssueContrib, repoCommitContrib, repoPullRequestContrib, repoPullRequestReviewContrib})
         console.log(userName)
       }
     } while (hasNextPageMember)
@@ -120,33 +120,59 @@ async function getMemberActivity(orgid, from, to, contribArray) {
       org
     })
 
-    // Set amount of days to query
-    const days = core.getInput('days', { required: false }) || '30'
+    // Detect if input is day amount or historic interval and set date variables
+    const fromdate = core.getInput('fromdate', {required: false}) || ''
+    const todate = core.getInput('todate', {required: false}) || ''
     const orgid = getOrgIdResult.organization.id
-    const to = new Date()
-    const from = new Date()
-    from.setDate(to.getDate() - days)
+
+    let to
+    let from
+    let days
+    let columnDate
+    let fileDate
+    let logDate
+
+    const regex = '([0-9]{4}-[0-9]{2}-[0-9]{2})'
+    const flags = 'i'
+    const re = new RegExp(regex, flags)
+
+    if (re.test(fromdate, todate) !== true) {
+      days = core.getInput('days', {required: false}) || '30'
+      to = new Date()
+      from = new Date()
+      from.setDate(to.getDate() - days)
+      columnDate = `<${days} days`
+      fileDate = `${days}-days`
+      logDate = `${days} days`
+    } else {
+      to = new Date(todate).toISOString()
+      from = new Date(fromdate).toISOString()
+      days = `${from.substr(0, 10)} to ${to.substr(0, 10)}`
+      columnDate = days
+      fileDate = `${from.substr(0, 10)}-to-${to.substr(0, 10)}`
+      logDate = days
+    }
 
     // Take time, orgid parameters and init array to get all member contributions
     const contribArray = []
-    console.log(`Retrieving the last ${days} days of member contribution data for the ${org} organization:`)
+    console.log(`Retrieving ${logDate} of member contribution data for the ${org} organization:`)
     await getMemberActivity(orgid, from, to, contribArray)
 
     // Set sorting settings and add header to array
     const columns = {
       userName: 'Member',
-      activeContrib: `Has active contributions (<${days} days)`,
-      commitContrib: `Commits created (<${days} days)`,
-      issueContrib: `Issues opened (<${days} days)`,
-      prContrib: `PRs opened (<${days} days)`,
-      prreviewContrib: `PR reviews (<${days} days)`,
-      repoIssueContrib: `Issue spread (<${days} days)`,
-      repoCommitContrib: `Commit spread (<${days} days)`,
-      repoPullRequestContrib: `PR spread (<${days} days)`,
-      repoPullRequestReviewContrib: `PR review spread (<${days} days)`
+      activeContrib: `Has active contributions (${columnDate})`,
+      commitContrib: `Commits created (${columnDate})`,
+      issueContrib: `Issues opened (${columnDate})`,
+      prContrib: `PRs opened (${columnDate})`,
+      prreviewContrib: `PR reviews (${columnDate})`,
+      repoIssueContrib: `Issue spread (${columnDate})`,
+      repoCommitContrib: `Commit spread (${columnDate})`,
+      repoPullRequestContrib: `PR spread (${columnDate})`,
+      repoPullRequestReviewContrib: `PR review spread (${columnDate})`
     }
-    const sortColumn = core.getInput('sort', { required: false }) || 'commitContrib'
-    const sortArray = arraySort(contribArray, sortColumn, { reverse: true })
+    const sortColumn = core.getInput('sort', {required: false}) || 'commitContrib'
+    const sortArray = arraySort(contribArray, sortColumn, {reverse: true})
     sortArray.unshift(columns)
 
     // Convert array to csv
@@ -159,10 +185,10 @@ async function getMemberActivity(orgid, from, to, contribArray) {
     })
 
     // Prepare path/filename, repo/org context and commit name/email variables
-    const reportPath = `reports/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${days}days.csv`
-    const committerName = core.getInput('committer-name', { required: false }) || 'github-actions'
-    const committerEmail = core.getInput('committer-email', { required: false }) || 'github-actions@github.com'
-    const { owner, repo } = github.context.repo
+    const reportPath = `reports/${org}-${new Date().toISOString().substring(0, 19) + 'Z'}-${fileDate}.csv`
+    const committerName = core.getInput('committer-name', {required: false}) || 'github-actions'
+    const committerEmail = core.getInput('committer-email', {required: false}) || 'github-actions@github.com'
+    const {owner, repo} = github.context.repo
 
     // Push csv to repo
     const opts = {
