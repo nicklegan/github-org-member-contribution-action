@@ -11,7 +11,14 @@ name: Member Contribution Report
 
 on:
   schedule:
-    - cron: '0 0 1 * *' # Runs on the first day of the month at 00:00
+    # Runs on the first day of the month at 00:00 UTC
+    #
+    #        ┌────────────── minute
+    #        │ ┌──────────── hour
+    #        │ │ ┌────────── day (month)
+    #        │ │ │ ┌──────── month
+    #        │ │ │ │ ┌────── day (week)
+    - cron: '0 0 1 * *'
   workflow_dispatch:
     inputs:
       fromdate:
@@ -30,7 +37,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Get Member Contributions
-        uses: nicklegan/github-org-member-contribution-action@v1.1.0
+        uses: nicklegan/github-org-member-contribution-action@v1.1.1
         with:
           token: ${{ secrets.ORG_TOKEN }}
           fromdate: ${{ github.event.inputs.fromdate }} # Used for workflow dispatch input
@@ -86,12 +93,18 @@ The results of all except the first two columns will be the sum of contributions
 | PR spread                | Number of repos the org member opened pull requests in          |
 | PR review spread         | Number of repos the org member reviewed pull request reviews in |
 
-A CSV report file to be saved in the repository `reports` folder using the following naming format: `organization-date-interval.csv`.
+A CSV report file to be saved in the repository __reports__ folder using the following naming format: __organization-date-interval.csv__.
 
-:bulb: If no contribution data for an org member is returned but `Has active contributions` returns `true`, the user was added to the organization during the requested interval which also counts as a contribution.
+:bulb: If no contribution data for an org member is returned but __Has active contributions__ returns __true__, the user was added to the organization during the requested interval which also counts as a contribution.
 
-## GitHub App installation authentication
+## GitHub App authentication
 
-In large organizations to avoid hitting the 5000 requests per hour GitHub API rate limit, [authenticating as a GitHub App installation](https://docs.github.com/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-an-installation) would increase the [API request limit](https://docs.github.com/developers/apps/building-github-apps/rate-limits-for-github-apps#github-enterprise-cloud-server-to-server-rate-limits) in comparison to using a personal access token.
+In some scenarios it might be preferred to authenthicate as a [GitHub App](https://docs.github.com/developers/apps/getting-started-with-apps/about-apps) rather than using a [personal access token](https://docs.github.com/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
 
-The authentication strategy can be integrated with the Octokit library by installing and configuring the [@octokit/auth-app](https://github.com/octokit/auth-app.js/#usage-with-octokit) npm module before [rebuilding](https://docs.github.com/actions/creating-actions/creating-a-javascript-action) the Action in a separate repository.
+The following features could be a benefit authenticating as a GitHub App installation:
+
+- The GitHub App is directly installed on the organization, no separate user account is required.
+- A GitHub App has more granular permissions than a personal access token.
+- To avoid hitting the 5000 requests per hour GitHub API rate limit, [authenticating as a GitHub App installation](https://docs.github.com/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-an-installation) would increase the [API request limit](https://docs.github.com/developers/apps/building-github-apps/rate-limits-for-github-apps#github-enterprise-cloud-server-to-server-rate-limits).
+
+The GitHub App authentication strategy can be integrated with the Octokit library by installing and configuring the [@octokit/auth-app](https://github.com/octokit/auth-app.js/#usage-with-octokit) npm module before [rebuilding](https://docs.github.com/actions/creating-actions/creating-a-javascript-action) the Action in a separate repository.
