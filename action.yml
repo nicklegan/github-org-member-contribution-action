@@ -20,11 +20,11 @@ inputs:
     required: false
   committer-name:
     description: 'The name of the committer that will appear in the Git history'
-    default: 'github-actions'
+    default: 'github-actions[bot]'
     required: false
   committer-email:
     description: 'The committer email that will appear in the Git history'
-    default: 'github-actions@github.com'
+    default: '41898282+github-actions[bot]@users.noreply.github.com'
     required: false
   fromdate:
     description: 'The date from which to start collecting data'
